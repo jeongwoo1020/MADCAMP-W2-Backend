@@ -15,19 +15,25 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 # API 문서 자동화 
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path("admin/", admin.site.urls),
 ]
 
 urlpatterns = [
-    # API 스키마 다운로드
+    path('admin/', admin.site.urls),
+    
+    # 우리가 만든 api 앱의 데이터 주소 연결 
+    path('api/', include('api.urls')),
+
+    # 2. API 문서 관련
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    # Swagger UI: 가장 많이 쓰이는 인터페이스
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    # Redoc: 또 다른 문서 스타일
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
