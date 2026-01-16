@@ -16,7 +16,18 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+# API 문서 자동화 
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+]
+
+urlpatterns = [
+    # API 스키마 다운로드
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    # Swagger UI: 가장 많이 쓰이는 인터페이스
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    # Redoc: 또 다른 문서 스타일
+    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
