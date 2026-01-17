@@ -131,3 +131,11 @@ class PostViewSet(viewsets.ModelViewSet):
 class ChatViewSet(viewsets.ModelViewSet):
     queryset = Chat.objects.all()
     serializer_class = ChatSerializer
+    
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+#테스트용
+@api_view(['GET'])
+def connection_test(request):
+    return Response({"message": "백엔드와 연결에 성공했습니다! 🚀"})
