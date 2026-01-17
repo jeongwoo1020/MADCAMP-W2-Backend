@@ -10,7 +10,6 @@ class User(AbstractUser):
     interests = models.JSONField(default=list, blank=True) # 관심사
     profile_img_url = models.TextField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
-    # created_at은 AbstractUser의 date_joined를 활용하거나 아래처럼 추가 가능
     created_at = models.DateTimeField(auto_now_add=True)
 
 # 2. Communities
@@ -28,11 +27,12 @@ class Community(models.Model):
 # 3. Members (User <-> Community 연결 및 추가 정보)
 class Member(models.Model):
     mem_idx = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    com_id = models.ForeignKey(Community, on_delete=models.CASCADE)
     nick_name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
     cert_cnt = models.IntegerField(default=0)
+    is_late_cnt = models.IntegerField(default=0)
     report_cnt = models.IntegerField(default=0)
     profile_img_url = models.TextField(null=True, blank=True)
     shame_img_url = models.TextField(null=True, blank=True)

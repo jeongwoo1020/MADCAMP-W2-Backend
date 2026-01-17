@@ -3,3 +3,6 @@ djangorestframework
 django-cors-headers
 psycopg[binary]
 drf-spectacular
+djangorestframework-simplejwt
+google-auth
+django-apscheduler
