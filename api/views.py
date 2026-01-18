@@ -6,6 +6,8 @@ from rest_framework import viewsets
 from .models import User, Community, Member, Post, Chat
 from .serializers import *
 from .services import PostService, CommunityService, AuthService
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 
 # 1. 회원가입 및 로그인 (Google Auth)
 class AuthViewSet(viewsets.ViewSet):
@@ -86,6 +88,19 @@ class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     
+    @extend_schema(
+        summary="오늘자 포스트 목록 조회",
+        description="커뮤니티 ID(com_id)를 받아 오늘 작성된 게시글을 불러옵니다. 미인증 시 타인의 사진은 블러 처리됩니다.",
+        parameters=[
+            OpenApiParameter(
+                name='com_id', 
+                type=OpenApiTypes.INT, 
+                location=OpenApiParameter.QUERY, 
+                description="커뮤니티 고유 ID",
+                required=True
+            ),
+        ]
+    )
     # 오늘자 포스트 불러오기 + 블러 처리
     def list(self, request):
         com_id = request.query_params.get('com_id')
