@@ -6,7 +6,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['user_id', 'user_name', 'score', 'interests', 'profile_img_url', 'created_at']
-        read_only_fields = ['id', 'created_at']
+        read_only_fields = ['user_id', 'created_at']
 
 class CommunitySerializer(serializers.ModelSerializer):
     class Meta:
@@ -27,9 +27,14 @@ class RegisterSerializer(serializers.Serializer):
     profile_img_url = serializers.CharField(help_text="Selected emoji or avatar URL")
 
 class PostSerializer(serializers.ModelSerializer):
+    image_url = serializers.ImageField(use_url=True)
+    com_id = serializers.CharField(write_only=True, required=False)
+    
     class Meta:
         model = Post
-        fields = '__all__'
+        # fields = '__all__'
+        fields = ['user_id', 'com_uuid', 'com_id', 'image_url', 'latitude', 'longitude', 'is_late']
+        # extra_kwargs = {'com_uuid': {'required': False}}
 
 class ChatSerializer(serializers.ModelSerializer):
     class Meta:

@@ -6,3 +6,6 @@ drf-spectacular
 djangorestframework-simplejwt
 google-auth
 django-apscheduler
+google-cloud-storage
+django-storages
+Pillow

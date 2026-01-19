@@ -205,3 +205,26 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+
+# --- GCP 보안 관련 ---
+# config 폴더 안의 모든 JSON 키 파일 제외
+config/*.json
+
+# 만약 파일명을 특정하고 싶다면 (추천)
+# config/gcp-key.json
+
+# --- 환경 변수 및 보안 ---
+.env
+*.env
+__pycache__/
+*.py[cod]
+
+# --- 미디어 및 정적 파일 (로컬 테스트용) ---
+media/
+staticfiles/
+
+# --- 기타 ---
+.DS_Store
+.vscode/
+.idea/

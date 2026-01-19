@@ -1,7 +1,9 @@
 from rest_framework import viewsets, status, permissions
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.utils import timezone
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import viewsets
 from .models import User, Community, Member, Post, Chat
 from .serializers import *
@@ -29,10 +31,19 @@ class AuthViewSet(viewsets.ViewSet):
         
         # AuthService에서 회원가입 처리
         user = AuthService.register_user(user_name, profile_img_url)
+
+        # JWT 토큰 발급
+        token = RefreshToken.for_user(user)
+        refresh = str(token)
+        access = str(token.access_token)
         
         return Response({
             'user': UserSerializer(user).data,
-            'user_id': user.user_id
+            'user_id': user.user_id,
+            'token': {
+                'access': access,
+                'refresh': refresh,
+            }
         }, status=status.HTTP_201_CREATED)
 
 
@@ -103,6 +114,7 @@ class MemberViewSet(viewsets.ModelViewSet):
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
+    parser_classes = [MultiPartParser, FormParser]
     
     @extend_schema(
         summary="오늘자 포스트 목록 조회",
@@ -148,6 +160,23 @@ class PostViewSet(viewsets.ModelViewSet):
         return Response(data)
 
     # 인증하기 (사진 업로드)
+    @extend_schema(
+        summary="인증 사진 업로드 (GCS)",
+        description="이미지 파일(image_url)을 직접 업로드하여 GCS에 저장합니다.",
+        request={
+            'multipart/form-data': {
+                'type': 'object',
+                'properties': {
+                    'com_id': {'type': 'string', 'description': '커뮤니티 ID (문자열)'},
+                    'image_url': {'type': 'string', 'format': 'binary', 'description': '인증 사진 파일'},
+                    'latitude': {'type': 'number', 'format': 'double'},
+                    'longitude': {'type': 'number', 'format': 'double'},
+                },
+                'required': ['com_id', 'image_url']
+            }
+        },
+        responses={201: PostSerializer}
+    )
     def create(self, request):
         # 사진 업로드, 지각 체크, 점수 가중치 계산은 모두 Service에서 수행
         # 문자열 com_id로 uuid 조회
