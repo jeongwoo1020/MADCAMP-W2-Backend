@@ -14,7 +14,8 @@ class User(AbstractUser):
 
 # 2. Communities
 class Community(models.Model):
-    com_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    com_uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    com_id = models.CharField(max_length=50, unique=True, help_text="User defined ID") # 사용자가 입력하는 ID
     com_name = models.CharField(max_length=200)
     description = models.TextField()
     # cert_type = models.CharField(max_length=50) 
@@ -28,7 +29,7 @@ class Community(models.Model):
 class Member(models.Model):
     mem_idx = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
-    com_id = models.ForeignKey(Community, on_delete=models.CASCADE)
+    com_uuid = models.ForeignKey(Community, on_delete=models.CASCADE)
     nick_name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
     cert_cnt = models.IntegerField(default=0)
@@ -42,7 +43,7 @@ class Member(models.Model):
 class Post(models.Model):
     post_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
-    com_id = models.ForeignKey(Community, on_delete=models.CASCADE)
+    com_uuid = models.ForeignKey(Community, on_delete=models.CASCADE)
     image_url = models.TextField()
     is_late = models.BooleanField(default=False)
     latitude = models.FloatField(null=True, blank=True)
@@ -53,8 +54,8 @@ class Post(models.Model):
 # 5. Chats
 class Chat(models.Model):
     comment_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    post_id = models.ForeignKey(Post, on_delete=models.CASCADE)
-    com_id = models.ForeignKey(Community, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    com_uuid = models.ForeignKey(Community, on_delete=models.CASCADE)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
