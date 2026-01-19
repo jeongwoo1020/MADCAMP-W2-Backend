@@ -5,7 +5,11 @@ from django.contrib.auth.models import AbstractUser
 # 1. Users (커스텀 유저 모델)
 class User(AbstractUser):
     user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    login_id = models.CharField(max_length=50, unique=True, null=True) # 로그인 ID
     user_name = models.CharField(max_length=100) # 본명
+    
+    USERNAME_FIELD = 'login_id'
+    REQUIRED_FIELDS = ['user_name']
     score = models.FloatField(default=50.0)      # 열정 점수
     interests = models.JSONField(default=list, blank=True) # 관심사
     profile_img_url = models.TextField(null=True, blank=True)

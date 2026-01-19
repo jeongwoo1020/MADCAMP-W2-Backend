@@ -5,7 +5,7 @@ from .models import User, Community, Member, Post, Chat
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['user_id', 'user_name', 'score', 'interests', 'profile_img_url', 'created_at']
+        fields = ['user_id', 'login_id', 'user_name', 'score', 'interests', 'profile_img_url', 'created_at']
         read_only_fields = ['user_id', 'created_at']
 
 class CommunitySerializer(serializers.ModelSerializer):
@@ -23,8 +23,14 @@ class MemberSerializer(serializers.ModelSerializer):
 
 
 class RegisterSerializer(serializers.Serializer):
+    login_id = serializers.CharField(max_length=50, help_text="User Login ID (unique)")
+    password = serializers.CharField(write_only=True, help_text="User Password")
     user_name = serializers.CharField(max_length=100, help_text="User's display name")
     profile_img_url = serializers.CharField(help_text="Selected emoji or avatar URL")
+
+class LoginSerializer(serializers.Serializer):
+    login_id = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True)
 
 class PostSerializer(serializers.ModelSerializer):
     image_url = serializers.ImageField(use_url=True)
