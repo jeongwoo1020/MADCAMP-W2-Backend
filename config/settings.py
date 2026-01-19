@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -44,6 +45,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'corsheaders',
     'django_apscheduler',
+    'channels',
     'api'
 ]
 
@@ -84,6 +86,7 @@ TEMPLATES = [
     },
 ]
 
+ASGI_APPLICATION = 'config.asgi.application'
 WSGI_APPLICATION = "config.wsgi.application"
 
 
@@ -187,4 +190,14 @@ SIMPLE_JWT = {
     # (선택 사항) 토큰 만료 시간 설정
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+}
+
+# Redis 등록을 위한 채널 레이어 설정
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('redis', 6379)], # 도커 서비스 이름인 'redis' 사용
+        },
+    },
 }

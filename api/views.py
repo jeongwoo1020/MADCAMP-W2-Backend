@@ -106,7 +106,22 @@ class CommunityViewSet(viewsets.ModelViewSet):
     serializer_class = CommunitySerializer
     
     # 커뮤니티 ID 검색 (기본 제공) 및 가입 로직
-    @action(detail=False, methods=['post']) # detail=True에서 False로 변경 (pk 없이 호출 가능)
+    @extend_schema(
+        request={
+            'application/json': {
+                'type': 'object',
+                'properties': {
+                    'com_id': {'type': 'string'},
+                    'nick_name': {'type': 'string'},
+                    'description': {'type': 'string'}
+                },
+                'required': ['com_id', 'nick_name']
+            }
+        },
+        summary="커뮤니티 가입",
+        responses={201: MemberSerializer}
+    )
+    @action(detail=False, methods=['post'])
     def join(self, request):
         com_id_text = request.data.get('com_id') # 사용자가 입력한 문자열 ID
         try:
