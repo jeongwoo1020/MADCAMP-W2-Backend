@@ -181,6 +181,7 @@ class PostService:
             latitude=latitude,
             longitude=longitude
         )
+        post.save()
         
         return post
 

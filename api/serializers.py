@@ -6,7 +6,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['user_id', 'user_name', 'score', 'interests', 'profile_img_url', 'created_at']
-        read_only_fields = ['id', 'created_at']
+        read_only_fields = ['user_id', 'created_at']
 
 class CommunitySerializer(serializers.ModelSerializer):
     class Meta:

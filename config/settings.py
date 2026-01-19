@@ -49,6 +49,7 @@ INSTALLED_APPS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
         'api.authentication.UserIdAuthentication',
     ),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
@@ -156,11 +157,34 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 INSTALLED_APPS += ['storages']
 
 # GCS 설정
-GS_BUCKET_NAME = os.getenv('GS_BUCKET_NAME')
+# 1. GCS 버킷 이름 및 권한 설정
+GS_BUCKET_NAME = 'madcamp-w2-storage'  # 정우님의 실제 버킷 이름으로 설정
+GS_DEFAULT_ACL = 'publicRead'           # GCS 파일 업로드 시 공개 읽기 권한 부여
+
 # 로컬 테스트 시에는 JSON 키 파일 경로를, 배포 시에는 IAM 사용
 GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
     os.path.join(BASE_DIR, os.getenv('GS_CREDENTIALS', 'config/gcp-key.json'))
 )
 
-DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
-GS_DEFAULT_ACL = 'publicRead'
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    # 유저 모델에서 주 키(PK)로 사용하는 필드명을 지정합니다.
+    'USER_ID_FIELD': 'user_id', 
+    
+    # 토큰 내부에 저장될 유저 식별자의 키 이름을 지정합니다.
+    'USER_ID_CLAIM': 'user_id',
+    
+    # (선택 사항) 토큰 만료 시간 설정
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+}

@@ -1,4 +1,5 @@
 from rest_framework import viewsets, status, permissions
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.utils import timezone
@@ -30,10 +31,19 @@ class AuthViewSet(viewsets.ViewSet):
         
         # AuthService에서 회원가입 처리
         user = AuthService.register_user(user_name, profile_img_url)
+
+        # JWT 토큰 발급
+        token = RefreshToken.for_user(user)
+        refresh = str(token)
+        access = str(token.access_token)
         
         return Response({
             'user': UserSerializer(user).data,
-            'user_id': user.user_id
+            'user_id': user.user_id,
+            'token': {
+                'access': access,
+                'refresh': refresh,
+            }
         }, status=status.HTTP_201_CREATED)
 
 
