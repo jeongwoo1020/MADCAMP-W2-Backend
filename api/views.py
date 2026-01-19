@@ -18,8 +18,8 @@ class AuthViewSet(viewsets.ViewSet):
     @extend_schema(
         request=RegisterSerializer,
         responses={200: UserSerializer},
-        summary="간편 회원가입",
-        description="이름과 아바타 URL을 받아 유저를 생성합니다."
+        summary="회원가입",
+        description="ID/PW/이름/아바타를 받아 유저를 생성합니다."
     )
     @action(detail=False, methods=['post'])
     def register(self, request):
@@ -28,9 +28,11 @@ class AuthViewSet(viewsets.ViewSet):
         
         user_name = serializer.validated_data['user_name']
         profile_img_url = serializer.validated_data['profile_img_url']
+        login_id = serializer.validated_data['login_id']
+        password = serializer.validated_data['password']
         
         # AuthService에서 회원가입 처리
-        user = AuthService.register_user(user_name, profile_img_url)
+        user = AuthService.register_user(user_name, profile_img_url, login_id, password)
 
         # JWT 토큰 발급
         token = RefreshToken.for_user(user)
@@ -45,6 +47,39 @@ class AuthViewSet(viewsets.ViewSet):
                 'refresh': refresh,
             }
         }, status=status.HTTP_201_CREATED)
+
+    @extend_schema(
+        request=LoginSerializer,
+        responses={200: UserSerializer}, # 실제로는 토큰과 유저 정보
+        summary="로그인",
+        description="ID/PW로 로그인하여 JWT 토큰을 발급받습니다."
+    )
+    @action(detail=False, methods=['post'])
+    def login(self, request):
+        serializer = LoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        login_id = serializer.validated_data['login_id']
+        password = serializer.validated_data['password']
+        
+        user = AuthService.login_user(login_id, password)
+        
+        if user is None:
+            return Response({"error": "ID 또는 비밀번호가 올바르지 않습니다."}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        # JWT 토큰 발급
+        token = RefreshToken.for_user(user)
+        refresh = str(token)
+        access = str(token.access_token)
+        
+        return Response({
+            'user': UserSerializer(user).data,
+            'user_id': user.user_id,
+            'token': {
+                'access': access,
+                'refresh': refresh,
+            }
+        }, status=status.HTTP_200_OK)
 
 
 # 2. 유저 정보 관리
