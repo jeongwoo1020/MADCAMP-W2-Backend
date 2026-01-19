@@ -9,3 +9,6 @@ django-apscheduler
 google-cloud-storage
 django-storages
 Pillow
+daphne
+channels
+channels-redis

@@ -4,9 +4,9 @@ from .models import User, Community, Member, Post, Chat
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('user_id', 'username', 'user_name', 'score', 'created_at', 'updated_at')
+    list_display = ('user_id', 'login_id', 'user_name', 'score', 'created_at', 'updated_at')
     readonly_fields = ('user_id', 'created_at', 'updated_at')
-    search_fields = ('user_name', 'username', 'email')
+    search_fields = ('user_name', 'user_id', 'login_id')
 
 @admin.register(Community)
 class CommunityAdmin(admin.ModelAdmin):
