@@ -13,16 +13,27 @@ from drf_spectacular.types import OpenApiTypes
 class AuthViewSet(viewsets.ViewSet):
     permission_classes = [permissions.AllowAny]
 
+    @extend_schema(
+        request=RegisterSerializer,
+        responses={200: UserSerializer},
+        summary="간편 회원가입",
+        description="이름과 아바타 URL을 받아 유저를 생성합니다."
+    )
     @action(detail=False, methods=['post'])
-    def google_login(self, request):
-        # 프론트엔드에서 받은 access_token 혹은 id_token
-        token = request.data.get('token')
-        # AuthService에서 토큰 검증 및 JWT 발급 처리
-        user_data, tokens = AuthService.authenticate_google_user(token)
+    def register(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        user_name = serializer.validated_data['user_name']
+        profile_img_url = serializer.validated_data['profile_img_url']
+        
+        # AuthService에서 회원가입 처리
+        user = AuthService.register_user(user_name, profile_img_url)
+        
         return Response({
-            'user': UserSerializer(user_data).data,
-            'tokens': tokens
-        }, status=status.HTTP_200_OK)
+            'user': UserSerializer(user).data,
+            'user_id': user.user_id
+        }, status=status.HTTP_201_CREATED)
 
 
 # 2. 유저 정보 관리
@@ -49,9 +60,14 @@ class CommunityViewSet(viewsets.ModelViewSet):
     serializer_class = CommunitySerializer
     
     # 커뮤니티 ID 검색 (기본 제공) 및 가입 로직
-    @action(detail=True, methods=['post'])
-    def join(self, request, pk=None):
-        community = self.get_object()
+    @action(detail=False, methods=['post']) # detail=True에서 False로 변경 (pk 없이 호출 가능)
+    def join(self, request):
+        com_id_text = request.data.get('com_id') # 사용자가 입력한 문자열 ID
+        try:
+            community = Community.objects.get(com_id=com_id_text)
+        except Community.DoesNotExist:
+             return Response({"error": "존재하지 않는 커뮤니티 ID입니다."}, status=404)
+
         nick_name = request.data.get('nick_name')
         description = request.data.get('description', "")
         
@@ -103,14 +119,20 @@ class PostViewSet(viewsets.ModelViewSet):
     )
     # 오늘자 포스트 불러오기 + 블러 처리
     def list(self, request):
-        com_id = request.query_params.get('com_id')
+        com_id_text = request.query_params.get('com_id')
+        try:
+            community = Community.objects.get(com_id=com_id_text)
+        except Community.DoesNotExist:
+             return Response({"error": "존재하지 않는 커뮤니티 ID입니다."}, status=404)
+        
+        com_uuid = community.com_uuid # 실제 DB 조회용 UUID
         today = timezone.now().date()
         
         # 1. 오늘 나의 인증 여부 확인 (Service 호출)
-        has_certified = PostService.is_user_certified_today(request.user, com_id)
+        has_certified = PostService.is_user_certified_today(request.user, com_uuid)
         
         # 2. 오늘자 포스트 쿼리
-        posts = Post.objects.filter(community_id=com_id, created_at__date=today)
+        posts = Post.objects.filter(com_uuid=com_uuid, created_at__date=today)
         serializer = self.get_serializer(posts, many=True)
         data = serializer.data
         
@@ -119,6 +141,7 @@ class PostViewSet(viewsets.ModelViewSet):
             MASKED_URL = "Masked_Url" # "https://your-s3-bucket.com/static/blurred-placeholder.png"
             for p in data:
                 # '내 글'이 아닌 경우에만 마스킹 처리
+                # Serializer outputs 'user_id' (UUID) for the ForeignKey
                 if str(p['user_id']) != str(request.user.user_id):
                     p['image_url'] = MASKED_URL
                     
@@ -127,9 +150,15 @@ class PostViewSet(viewsets.ModelViewSet):
     # 인증하기 (사진 업로드)
     def create(self, request):
         # 사진 업로드, 지각 체크, 점수 가중치 계산은 모두 Service에서 수행
+        # 문자열 com_id로 uuid 조회
+        try:
+           community = Community.objects.get(com_id=request.data.get('com_id'))
+        except Community.DoesNotExist:
+           return Response({"error": "Invalid community ID"}, status=400)
+
         post = PostService.process_certification(
             user=request.user,
-            com_id=request.data.get('com_id'),
+            com_id=community, # Service가 instance를 받도록 수정 혹은 uuid 전달
             image=request.FILES.get('image_url'),
             latitude=request.data.get('latitude'),
             longitude=request.data.get('longitude')

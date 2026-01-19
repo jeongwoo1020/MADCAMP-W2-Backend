@@ -21,6 +21,11 @@ class MemberSerializer(serializers.ModelSerializer):
         model = Member
         fields = '__all__'
 
+
+class RegisterSerializer(serializers.Serializer):
+    user_name = serializers.CharField(max_length=100, help_text="User's display name")
+    profile_img_url = serializers.CharField(help_text="Selected emoji or avatar URL")
+
 class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
