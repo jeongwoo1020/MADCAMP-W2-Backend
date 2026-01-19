@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from google.oauth2 import service_account
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -150,3 +151,16 @@ CORS_ALLOWED_ORIGINS = [
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# GCS 이미지 저장소 연결
+INSTALLED_APPS += ['storages']
+
+# GCS 설정
+GS_BUCKET_NAME = os.getenv('GS_BUCKET_NAME')
+# 로컬 테스트 시에는 JSON 키 파일 경로를, 배포 시에는 IAM 사용
+GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
+    os.path.join(BASE_DIR, os.getenv('GS_CREDENTIALS', 'config/gcp-key.json'))
+)
+
+DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+GS_DEFAULT_ACL = 'publicRead'
