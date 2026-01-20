@@ -223,7 +223,26 @@
   }
   ```
 
-### 4-3. 포스트 삭제
+### 4-3. 나의 포스트 불러오기
+커뮤니티와 관계 없이 본인이 업로드한 모든 포스트 정보를 불러옵니다. 
+
+- **URL**: `/posts/my-history/`
+- **Method**: `GET`
+- **Header**: `Authorization: Bearer <ACCESS_TOKEN>`
+- **Response (200 OK)**:
+  ```json
+  {
+    "post_id": "uuid",
+    "user_id": "uuid",
+    "com_uuid": "uuid",
+    "com_name": "string",
+    "image_url": "string",
+    "is_late": true,
+    "created_at": "datetime"
+  }
+  ```
+
+### 4-4. 포스트 삭제
 인증을 취소하고 삭제합니다. 획득했던 점수도 롤백됩니다.
 - **URL**: `/posts/{id}/`
 - **Method**: `DELETE`
