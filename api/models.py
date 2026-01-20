@@ -106,13 +106,24 @@ class Member(models.Model):
             # 혹시 위 로직에서도 에러가 나면 그냥 PK(UUID)라도 반환
             return str(self.pk)
 
+import os
+
+def rename_image_path(instance, filename):
+    # 파일 확장자 추출 (예: .jpg, .png)
+    ext = filename.split('.')[-1]
+    # post_id를 파일명으로 사용 (예: 550e8400-e29b-41d4-a716-446655440000.jpg)
+    filename = f"{instance.post_id}.{ext}"
+    # 'posts/UUID.jpg' 경로 반환
+    return os.path.join('posts/', filename)
+
 # 4. Posts (인증 포스트)
 class Post(models.Model):
     post_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
     com_uuid = models.ForeignKey(Community, on_delete=models.CASCADE)
     # image_url = models.TextField()
-    image_url = models.ImageField(upload_to='posts/', null=True, blank=True)
+    # image_url = models.ImageField(upload_to='posts/', null=True, blank=True)
+    image_url = models.ImageField(upload_to=rename_image_path, null=True, blank=True)
     is_late = models.BooleanField(default=False)
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
