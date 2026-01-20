@@ -4,7 +4,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.utils import timezone
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework import viewsets
 from .models import User, Community, Member, Post, Chat
 from .serializers import *
@@ -106,21 +106,25 @@ class UserViewSet(viewsets.ModelViewSet):
 class CommunityViewSet(viewsets.ModelViewSet):
     queryset = Community.objects.all()
     serializer_class = CommunitySerializer
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     
     # 커뮤니티 ID 검색 (기본 제공) 및 가입 로직
     @extend_schema(
+        summary="커뮤니티 가입",
+        description="닉네임과 함께 프로필, 수치의 전당에 박제될 이미지를 직접 업로드합니다.",
         request={
-            'application/json': {
+            'multipart/form-data': {
                 'type': 'object',
                 'properties': {
                     'com_id': {'type': 'string'},
                     'nick_name': {'type': 'string'},
-                    'description': {'type': 'string'}
+                    'description': {'type': 'string'},
+                    'profile_image': {'type': 'string', 'format': 'binary'},
+                    'shame_image': {'type': 'string', 'format': 'binary'} # 파일 형식 지정
                 },
-                'required': ['com_id', 'nick_name']
+                'required': ['com_id', 'nick_name', 'profile_image', 'shame_image']
             }
         },
-        summary="커뮤니티 가입",
         responses={201: MemberSerializer}
     )
     @action(detail=False, methods=['post'])
@@ -133,6 +137,8 @@ class CommunityViewSet(viewsets.ModelViewSet):
 
         nick_name = request.data.get('nick_name')
         description = request.data.get('description', "")
+        profile_image = request.FILES.get('profile_image')
+        shame_image = request.FILES.get('shame_image')
         
         if not nick_name:
             return Response({"error": "닉네임은 필수입니다."}, status=400)
@@ -142,7 +148,9 @@ class CommunityViewSet(viewsets.ModelViewSet):
             user=request.user, 
             community=community,
             nick_name=nick_name,
-            description=description
+            description=description,
+            profile_img_url=profile_image,
+            shame_img_url=shame_image
         )
         return Response(MemberSerializer(member).data, status=status.HTTP_201_CREATED)
     
@@ -150,13 +158,15 @@ class CommunityViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def rankings(self, request, pk=None):
         rankings = CommunityService.get_community_rankings(pk)
-        return Response(rankings)
+        serializer = MemberSerializer(rankings, many=True)
+        return Response(serializer.data)
 
     # 수치의 전당 조회
     @action(detail=True, methods=['get'])
     def hall_of_shame(self, request, pk=None):
         shame_list = CommunityService.get_hall_of_shame(pk)
-        return Response(shame_list)
+        serializer = MemberSerializer(shame_list, many=True, context={'request': request})
+        return Response(serializer.data)
 
 class MemberViewSet(viewsets.ModelViewSet):
     queryset = Member.objects.all()
@@ -178,7 +188,8 @@ class MemberViewSet(viewsets.ModelViewSet):
     @extend_schema(
         summary="커뮤니티 멤버 목록 조회",
         description="com_uuid를 사용하여 해당 커뮤니티의 멤버 리스트를 가져옵니다.",
-        parameters=[OpenApiParameter(name='com_uuid', description='커뮤니티의 고유 UUID (PK)', required=False, type=str)]
+        parameters=[OpenApiParameter(name='com_uuid', description='커뮤니티의 고유 UUID (PK)', required=False, type=str)],
+        responses={200: MemberSerializer(many=True)}
     )
     @action(detail=False, methods=['get'])
     def get_members(self, request):
@@ -193,7 +204,7 @@ class MemberViewSet(viewsets.ModelViewSet):
         else:
             return Response({"error": "com_uuid가 필요합니다."}, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = MemberSerializer(members, many=True)
+        serializer = MemberSerializer(members, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 
@@ -277,7 +288,7 @@ class PostViewSet(viewsets.ModelViewSet):
 
         post = PostService.process_certification(
             user=request.user,
-            community=community, 
+            com_id=community, 
             image=request.FILES.get('image_url'),
             latitude=request.data.get('latitude'),
             longitude=request.data.get('longitude')

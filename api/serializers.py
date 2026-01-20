@@ -16,10 +16,12 @@ class CommunitySerializer(serializers.ModelSerializer):
 class MemberSerializer(serializers.ModelSerializer):
     # 유저와 커뮤니티의 상세 정보를 함께 보고 싶다면 아래 주석을 해제하세요
     # user_details = UserSerializer(source='user', read_only=True)
+    community_details = CommunitySerializer(source='com_uuid', read_only=True)
     
     class Meta:
         model = Member
-        fields = '__all__'
+        fields = ['mem_idx', 'user_id', 'com_uuid', 'community_details', 'nick_name', 'description', 'cert_cnt', 'is_late_cnt', 'shame_img_url', 'profile_img_url', 'joined_at']
+        read_only_fields = ['mem_idx', 'joined_at']
 
 
 class RegisterSerializer(serializers.Serializer):
