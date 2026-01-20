@@ -34,13 +34,21 @@ class LoginSerializer(serializers.Serializer):
 
 class PostSerializer(serializers.ModelSerializer):
     image_url = serializers.ImageField(use_url=True)
-    com_id = serializers.CharField(write_only=True, required=False)
+    # com_id = serializers.CharField(write_only=True, required=False)
     
     class Meta:
         model = Post
-        # fields = '__all__'
-        fields = ['user_id', 'com_uuid', 'com_id', 'image_url', 'latitude', 'longitude', 'is_late']
-        # extra_kwargs = {'com_uuid': {'required': False}}
+        fields = [
+            'post_id',    
+            'user_id', 
+            'com_uuid', 
+            'image_url', 
+            'is_late', 
+            'latitude', 
+            'longitude', 
+            'created_at'  
+        ]
+        read_only_fields = ['post_id', 'created_at', 'is_late']
 
 class ChatSerializer(serializers.ModelSerializer):
     class Meta:

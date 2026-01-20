@@ -204,27 +204,24 @@ class PostViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser]
     
     @extend_schema(
-        summary="오늘자 포스트 목록 조회",
-        description="커뮤니티 ID(com_id)를 받아 오늘 작성된 게시글을 불러옵니다. 미인증 시 타인의 사진은 블러 처리됩니다.",
+        summary="오늘자 포스트 목록 조회 (UUID 기반)",
+        description="커뮤니티의 고유 UUID를 받아 오늘 작성된 게시글을 불러옵니다. 미인증 시 타인의 사진은 블러 처리됩니다.",
         parameters=[
             OpenApiParameter(
-                name='com_id', 
-                type=OpenApiTypes.INT, 
+                name='com_uuid', 
+                type=str, 
                 location=OpenApiParameter.QUERY, 
-                description="커뮤니티 고유 ID",
+                description="커뮤니티 고유 UUID (PK)",
                 required=True
             ),
         ]
     )
     # 오늘자 포스트 불러오기 + 블러 처리
     def list(self, request):
-        com_id_text = request.query_params.get('com_id')
-        try:
-            community = Community.objects.get(com_id=com_id_text)
-        except Community.DoesNotExist:
-             return Response({"error": "존재하지 않는 커뮤니티 ID입니다."}, status=404)
+        com_uuid = request.query_params.get('com_uuid')
+        if not com_uuid:
+            return Response({"error": "com_uuid 파라미터가 필요합니다."}, status=400)
         
-        com_uuid = community.com_uuid # 실제 DB 조회용 UUID
         today = timezone.now().date()
         
         # 1. 오늘 나의 인증 여부 확인 (Service 호출)
@@ -237,7 +234,7 @@ class PostViewSet(viewsets.ModelViewSet):
         
         # 3. 미인증 시 타인의 이미지를 마스킹(Blur) 처리
         if not has_certified:
-            MASKED_URL = "Masked_Url" # "https://your-s3-bucket.com/static/blurred-placeholder.png"
+            MASKED_URL = "https://console.cloud.google.com/storage/browser/_details/madcamp-w2-storage/posts/img_Test2.jpg?pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22))&project=madcamp-w2-backend" # "https://your-s3-bucket.com/static/blurred-placeholder.png"
             for p in data:
                 # '내 글'이 아닌 경우에만 마스킹 처리
                 # Serializer outputs 'user_id' (UUID) for the ForeignKey
@@ -249,17 +246,21 @@ class PostViewSet(viewsets.ModelViewSet):
     # 인증하기 (사진 업로드)
     @extend_schema(
         summary="인증 사진 업로드 (GCS)",
-        description="이미지 파일(image_url)을 직접 업로드하여 GCS에 저장합니다.",
+        description="커뮤니티 고유 UUID(com_uuid)와 이미지 파일을 전송하여 인증을 완료합니다.",
         request={
             'multipart/form-data': {
                 'type': 'object',
                 'properties': {
-                    'com_id': {'type': 'string', 'description': '커뮤니티 ID (문자열)'},
+                    'com_uuid': { 
+                        'type': 'string', 
+                        'format': 'uuid', 
+                        'description': '커뮤니티 고유 UUID (PK)'
+                    },
                     'image_url': {'type': 'string', 'format': 'binary', 'description': '인증 사진 파일'},
                     'latitude': {'type': 'number', 'format': 'double'},
                     'longitude': {'type': 'number', 'format': 'double'},
                 },
-                'required': ['com_id', 'image_url']
+                'required': ['com_uuid', 'image_url']
             }
         },
         responses={201: PostSerializer}
@@ -267,14 +268,16 @@ class PostViewSet(viewsets.ModelViewSet):
     def create(self, request):
         # 사진 업로드, 지각 체크, 점수 가중치 계산은 모두 Service에서 수행
         # 문자열 com_id로 uuid 조회
+        com_uuid = request.data.get('com_uuid')
         try:
-           community = Community.objects.get(com_id=request.data.get('com_id'))
+            # PK인 com_uuid로 즉시 조회하여 효율성을 높입니다.
+            community = Community.objects.get(com_uuid=com_uuid)
         except Community.DoesNotExist:
-           return Response({"error": "Invalid community ID"}, status=400)
+            return Response({"error": "존재하지 않는 커뮤니티 UUID입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         post = PostService.process_certification(
             user=request.user,
-            com_id=community, # Service가 instance를 받도록 수정 혹은 uuid 전달
+            community=community, 
             image=request.FILES.get('image_url'),
             latitude=request.data.get('latitude'),
             longitude=request.data.get('longitude')

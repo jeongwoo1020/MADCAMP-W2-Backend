@@ -173,11 +173,11 @@
 
 ## 📸 4. 포스트 (Posts)
 
-### 4-1. 오늘자 포스트 목록 조회 (수정중)
+### 4-1. 오늘자 포스트 목록 조회 
 특정 커뮤니티의 오늘 올라온 인증글들을 가져옵니다. 내가 오늘 인증하지 않았다면 다른 사람의 사진은 블러(Masked) 처리되어 보입니다.
 
-- **URL**: `/posts/?com_id={community_text_id}`
-- **Query Params**: `com_id` (커뮤니티의 텍스트 ID, e.g. "알고리즘스터디")
+- **URL**: `/posts/?com_uuid={com_uuid}`
+- **Query Params**: `com_uuid` 
 - **Method**: `GET`
 - **Header**: `Authorization: Bearer <ACCESS_TOKEN>`
 - **Response (200 OK)**:
@@ -186,12 +186,12 @@
     {
       "post_id": "uuid",
       "user_id": "uuid",
-      "com_id": "알고리즘스터디",
+      "com_uuid": "uuid",
       "image_url": "https://... (또는 Masked_Url)",
-      "is_late": false,
-      "latitude": 37.5,
-      "longitude": 127.0,
-      "created_at": "..."
+      "is_late": true,
+      "latitude": 0,
+      "longitude": 0,
+      "created_at": "datetime"
     },
     ...
   ]
@@ -205,16 +205,21 @@
 - **Header**: `Authorization: Bearer <ACCESS_TOKEN>`
 - **Content-Type**: `multipart/form-data`
 - **Form Data**:
-  - `com_id`: 커뮤니티 텍스트 ID (String)
+  - `com_uuid`: 커뮤니티 uuid
   - `image_url`: 파일 객체 (File)
   - `latitude`: 위도 (Double, 선택)
   - `longitude`: 경도 (Double, 선택)
 - **Response (201 Created)**:
   ```json
   {
-      "post_id": "...",
-      "is_late": false,
-      ...
+    "post_id": "uuid",
+    "user_id": "uuid",
+    "com_uuid": "uuid",
+    "image_url": "Google Cloud Storage uploaded url",
+    "is_late": true,
+    "latitude": 0,
+    "longitude": 0,
+    "created_at": "datetime"
   }
   ```
 

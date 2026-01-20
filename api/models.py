@@ -2,6 +2,7 @@ import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
+# admin 계정 생성 용 
 class UserManager(BaseUserManager):
     def create_user(self, login_id, user_name, password=None, **extra_fields):
         if not login_id:
