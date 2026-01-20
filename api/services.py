@@ -51,7 +51,7 @@ class AuthService:
 
 class CommunityService:
     @staticmethod
-    def join_community(user, community, nick_name, description=""):
+    def join_community(user, community, nick_name, profile_image, shame_image, description=""):
         """프론트에서 받은 닉네임과 소개를 포함하여 가입 처리"""
         if Member.objects.filter(user_id=user, com_uuid=community).exists():
             raise ValidationError("이미 가입된 커뮤니티입니다.")
@@ -60,23 +60,22 @@ class CommunityService:
             user_id=user,         # 모델의 FK 필드명
             com_uuid=community,     # 모델의 FK 필드명
             nick_name=nick_name,
+            profile_img_url=profile_image,
+            shame_img_url=shame_image,
             description=description,
             cert_cnt=0,
             is_late_cnt=0
         )
+        
     @staticmethod
     def get_community_rankings(com_uuid):
         """커뮤니티 내 유저별 순위 매기기 (인증횟수 DESC, 지각횟수 ASC)"""
         return Member.objects.filter(com_uuid=com_uuid)\
             .order_by('-cert_cnt', 'is_late_cnt')
 
-    # @staticmethod
-    # def get_hall_of_shame(com_id):
-    #     """수치의 전당: 인증 요일에만 최신화, 그 외엔 유지"""
     @staticmethod
     def get_hall_of_shame(com_uuid):
         """수치의 전당: 인증 요일에만 최신화, 그 외엔 유지"""
-        # com_id가 UUID일 수도 있고 instance일 수도 있음. 여기서는 view에서 instance 넘길 수도 있고 아닐 수도 있음.
         # ViewSet.hall_of_shame에서 pk(uuid)를 넘김.
         if isinstance(com_uuid, str) or isinstance(com_uuid, uuid.UUID):
              community = Community.objects.get(pk=com_uuid)
@@ -89,7 +88,6 @@ class CommunityService:
         
         # 1. 기준이 되는 '대상 날짜(target_date)' 찾기
         target_date = None
-        current_check_date = today_date
         
         # 오늘이 인증 요일이고 마감 시간이 지났는지 확인
         is_cert_day = weekdays_map[now.weekday()] in community.cert_days
@@ -112,7 +110,7 @@ class CommunityService:
         
         certified_users = Post.objects.filter(
             com_uuid=com_uuid, 
-            created_at__date=target_date()
+            created_at__date=target_date
         ).values_list('user_id', flat=True)
         
         return Member.objects.filter(com_uuid=com_uuid).exclude(user_id__in=certified_users)

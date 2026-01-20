@@ -76,8 +76,10 @@ class Member(models.Model):
     cert_cnt = models.IntegerField(default=0)
     is_late_cnt = models.IntegerField(default=0)
     report_cnt = models.IntegerField(default=0)
-    profile_img_url = models.TextField(null=True, blank=True)
-    shame_img_url = models.TextField(null=True, blank=True)
+    # profile_img_url = models.TextField(null=True, blank=True)
+    profile_img_url = models.ImageField(upload_to='profile/', null=True, blank=True)
+    # shame_img_url = models.TextField(null=True, blank=True)
+    shame_img_url = models.ImageField(upload_to='shame/', null=True, blank=True)
     joined_at = models.DateTimeField(auto_now_add=True)
     
     # def __str__(self):
