@@ -274,7 +274,24 @@
 }
 ```
 
-### 5-3. 주의사항
+### 5-3. 이전 메세지 내역 조회 
+REST API를 기반으로 특정 커뮤니티의 이전 대화 내역을 조회합니다.
+- **URL**: `/chats/chat_history/?com_uuid={com_uuid}`
+- **Method**: `GET`
+- **Query Params**: `com_uuid` 
+- **Header**: `Authorization: Bearer <ACCESS_TOKEN>`
+- **Response (200 OK)**:
+```json
+{
+  "user_id": "uuid",
+  "sender_id": "uuid",
+  "sender_nickname": "string",
+  "content": "string",
+  "created_at": "datetime"
+}
+```
+
+### 5-4. 주의사항
 - 연결 시 별도의 인증 헤더를 지원하지 않는 경우, 쿼리 파라미터나 쿠키 세션을 활용해야 할 수 있습니다. (현재 구현은 `self.scope['user']`를 참조하므로 세션 인증이 필요할 수 있음)
 - 연결 후 메시지 전송은 JSON 문자열로 직렬화하여 보내야 합니다.
 
