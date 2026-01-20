@@ -27,7 +27,7 @@ class AuthService:
         # 유저 생성 (user_id is UUID)
         user = User.objects.create(
             user_id=user_uuid, 
-            username=user_uuid, # AbstractUser의 username 필드 필수 (Unique) -> UUID로 채움
+            # username=user_uuid, # AbstractUser의 username 필드 필수 (Unique) -> UUID로 채움
             login_id=login_id,
             user_name=user_name,
             profile_img_url=profile_img_url,

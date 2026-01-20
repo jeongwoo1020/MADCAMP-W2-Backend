@@ -312,9 +312,31 @@ class PostViewSet(viewsets.ModelViewSet):
         PostService.rollback_certification(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+# 5. 채팅 관리
 class ChatViewSet(viewsets.ModelViewSet):
     queryset = Chat.objects.all()
     serializer_class = ChatSerializer
+    
+    @extend_schema(
+        summary="채팅 내역 조회",
+        description="특정 커뮤니티의 이전 대화 내역을 불러옵니다.",
+        parameters=[
+            OpenApiParameter(name='com_uuid', type=str, location='query', required=True)
+        ]
+    )
+    @action(detail=False, methods=['get'], url_path='chat_history')
+    def chat_history(self, request):
+        com_uuid = request.query_params.get('com_uuid')
+        
+        if not com_uuid:
+            return Response({"error": "com_uuid가 필요합니다."}, status=400)
+
+        # 해당 커뮤니티의 메시지를 최신순(또는 과거순)으로 정렬하여 가져옵니다.
+        messages = Chat.objects.filter(com_uuid=com_uuid).order_by('created_at')
+        
+        serializer = self.get_serializer(messages, many=True)
+        return Response(serializer.data)
+    
 
 # 테스트 API
 @api_view(['GET'])
