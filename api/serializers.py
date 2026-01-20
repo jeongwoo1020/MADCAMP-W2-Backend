@@ -66,6 +66,17 @@ class PostHistorySerializer(serializers.ModelSerializer):
         ]
 
 class ChatSerializer(serializers.ModelSerializer):
+    sender_nickname = serializers.SerializerMethodField()
+    sender_id = serializers.ReadOnlyField(source='user_id.user_id')
+
     class Meta:
         model = Chat
-        fields = '__all__'
+        fields = ['user_id', 'sender_id', 'sender_nickname', 'content', 'created_at']
+        
+    def get_sender_nickname(self, obj):
+        # 현재 채팅 메시지의 '유저'와 '커뮤니티' 정보를 동시에 만족하는 '멤버'를 찾습니다.
+        try:
+            member = Member.objects.get(user_id=obj.user_id, com_uuid=obj.com_uuid)
+            return member.nick_name
+        except Member.DoesNotExist:
+            return obj.user_id.user_name
