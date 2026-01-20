@@ -49,6 +49,21 @@ class PostSerializer(serializers.ModelSerializer):
             'created_at'  
         ]
         read_only_fields = ['post_id', 'created_at', 'is_late']
+        
+class PostHistorySerializer(serializers.ModelSerializer):
+    com_name = serializers.ReadOnlyField(source='com_uuid.com_name')
+
+    class Meta:
+        model = Post
+        fields = [
+            'post_id',    
+            'user_id', 
+            'com_uuid',
+            'com_name',
+            'image_url', 
+            'is_late', 
+            'created_at'  
+        ]
 
 class ChatSerializer(serializers.ModelSerializer):
     class Meta:

@@ -203,6 +203,7 @@ class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
     parser_classes = [MultiPartParser, FormParser]
     
+    # 1. 오늘자 포스트 불러오기 + 블러 처리
     @extend_schema(
         summary="오늘자 포스트 목록 조회 (UUID 기반)",
         description="커뮤니티의 고유 UUID를 받아 오늘 작성된 게시글을 불러옵니다. 미인증 시 타인의 사진은 블러 처리됩니다.",
@@ -216,7 +217,6 @@ class PostViewSet(viewsets.ModelViewSet):
             ),
         ]
     )
-    # 오늘자 포스트 불러오기 + 블러 처리
     def list(self, request):
         com_uuid = request.query_params.get('com_uuid')
         if not com_uuid:
@@ -243,7 +243,7 @@ class PostViewSet(viewsets.ModelViewSet):
                     
         return Response(data)
 
-    # 인증하기 (사진 업로드)
+    # 2. 인증하기 (사진 업로드)
     @extend_schema(
         summary="인증 사진 업로드 (GCS)",
         description="커뮤니티 고유 UUID(com_uuid)와 이미지 파일을 전송하여 인증을 완료합니다.",
@@ -284,7 +284,28 @@ class PostViewSet(viewsets.ModelViewSet):
         )
         return Response(PostSerializer(post).data, status=status.HTTP_201_CREATED)
 
-    # 포스트 삭제 (점수/카운트 복구 포함)
+    # 3. 나의 포스트 불러오기 (캘린더)
+    def get_serializer_class(self):
+        if self.action == 'my_history':
+            return PostHistorySerializer
+        return PostSerializer
+    
+    @extend_schema(
+        summary="내 전체 포스트 히스토리 조회",
+        description="내가 모든 커뮤니티에 올린 글을 가져오며, 커뮤니티 이름(com_name)이 포함됩니다.",
+        responses={200: PostHistorySerializer(many=True)}
+    )
+    @action(detail=False, methods=['get'], url_path='my-history')
+    def my_history(self, request):
+        posts = Post.objects.filter(user_id=request.user)\
+                    .select_related('com_uuid')\
+                    .order_by('-created_at')
+        serializer = self.get_serializer(posts, many=True)
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
+        
+    
+    # 4. 포스트 삭제 (점수/카운트 복구 포함)
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         # 삭제 시 수반되는 점수 복구 로직은 Service에서 처리
