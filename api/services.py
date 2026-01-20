@@ -65,23 +65,23 @@ class CommunityService:
             is_late_cnt=0
         )
     @staticmethod
-    def get_community_rankings(com_id):
+    def get_community_rankings(com_uuid):
         """커뮤니티 내 유저별 순위 매기기 (인증횟수 DESC, 지각횟수 ASC)"""
-        return Member.objects.filter(com_uuid=com_id)\
+        return Member.objects.filter(com_uuid=com_uuid)\
             .order_by('-cert_cnt', 'is_late_cnt')
 
+    # @staticmethod
+    # def get_hall_of_shame(com_id):
+    #     """수치의 전당: 인증 요일에만 최신화, 그 외엔 유지"""
     @staticmethod
-    def get_hall_of_shame(com_id):
-        """수치의 전당: 인증 요일에만 최신화, 그 외엔 유지"""
-    @staticmethod
-    def get_hall_of_shame(com_id):
+    def get_hall_of_shame(com_uuid):
         """수치의 전당: 인증 요일에만 최신화, 그 외엔 유지"""
         # com_id가 UUID일 수도 있고 instance일 수도 있음. 여기서는 view에서 instance 넘길 수도 있고 아닐 수도 있음.
         # ViewSet.hall_of_shame에서 pk(uuid)를 넘김.
-        if isinstance(com_id, str) or isinstance(com_id, uuid.UUID):
-             community = Community.objects.get(pk=com_id)
+        if isinstance(com_uuid, str) or isinstance(com_uuid, uuid.UUID):
+             community = Community.objects.get(pk=com_uuid)
         else:
-             community = com_id
+             community = com_uuid
         
         now = timezone.now()
         today_date = now.date()
@@ -111,11 +111,11 @@ class CommunityService:
             return Member.objects.none()
         
         certified_users = Post.objects.filter(
-            com_uuid=com_id, 
+            com_uuid=com_uuid, 
             created_at__date=target_date()
         ).values_list('user_id', flat=True)
         
-        return Member.objects.filter(com_uuid=com_id).exclude(user_id__in=certified_users)
+        return Member.objects.filter(com_uuid=com_uuid).exclude(user_id__in=certified_users)
 
 class PostService:
     @staticmethod

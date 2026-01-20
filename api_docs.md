@@ -142,7 +142,7 @@
 - **Response (201 Created)**: 생성된 멤버 정보
 
 ### 3-3. 커뮤니티 랭킹 조회
-- **URL**: `/communities/{com_id}/rankings/` 
+- **URL**: `/communities/{com_uuid}/rankings/` 
 - **Method**: `GET`
 - **Response (200 OK)**:
   ```json
@@ -159,7 +159,7 @@
 
 ### 3-4. 수치의 전당 (Hall of Shame)
 인증 요일에 지각했거나 미인증한 멤버들을 보여줍니다.
-- **URL**: `/communities/{com_id}/hall_of_shame/`
+- **URL**: `/communities/{com_uuid}/hall_of_shame/`
 - **Method**: `GET`
 - **Response (200 OK)**:
   ```json
