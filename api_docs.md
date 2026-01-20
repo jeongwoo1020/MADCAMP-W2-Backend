@@ -257,37 +257,52 @@
 ---
 
 
-## 👥 6. 멤버 (Members) (수정중)
-커뮤니티에 가입된 멤버 정보를 직접 관리(조회/수정/삭제)하는 기본 API입니다.
-(가입은 주로 `3-2. 커뮤니티 가입`을 통해 이루어지지만, 이곳에서도 관리가 가능합니다.)
+## 👥 6. 멤버 (Members) 
+커뮤니티에 가입된 멤버 정보를 관리하는 API입니다.
 
 ### 6-1. 멤버 목록 조회
-- **URL**: `/members/`
+- **URL**: `/members/get_members//?com_uuid={com_uuid}`
 - **Method**: `GET`
 - **Response (200 OK)**:
   ```json
   [
     {
       "mem_idx": "uuid",      // 멤버 고유 ID (PK)
-      "user_id": "uuid",      // 유저 ID (FK)
-      "com_uuid": "uuid",     // 커뮤니티 UUID (FK)
-      "nick_name": "닉네임",
+      "nick_name": "uuid",    
       "description": "소개글",
       "cert_cnt": 0,          // 인증 횟수
       "is_late_cnt": 0,       // 지각 횟수
       "report_cnt": 0,        // 신고 횟수
       "profile_img_url": "url",
       "shame_img_url": "url",
-      "joined_at": "datetime"
+      "joined_at": "datetime",
+      "user_id": "uuid",      // 유저 ID (FK)
+      "com_uuid": "uuid"      // 커뮤니티 ID (FK)
     },
     ...
   ]
   ```
 
-### 6-2. 특정 멤버 상세 조회
-- **URL**: `/members/{mem_idx}/`
+### 6-2. 본인 커뮤니티 조회
+로그인 토큰을 기반으로 본인이 속한 커뮤니티를 조회하는 API 입니다.
+- **URL**: `/members/my_communities/`
 - **Method**: `GET`
-- **Response (200 OK)**: 단일 멤버 객체
+- **Response (200 OK)**: =
+  ```json
+  [
+    {
+      "com_uuid": "uuid",
+      "com_id": "string",
+      "com_name": "string",
+      "description": "string",
+      "cert_days": "string",
+      "cert_time": "10:42:24.061000",
+      "icon_url": "string",
+      "created_at": "datetime",
+      "updated_at": "datetime"
+    }
+  ]
+  ```
 
 ### 6-3. 멤버 정보 수정
 - **URL**: `/members/{mem_idx}/`
