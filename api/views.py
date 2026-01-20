@@ -1,4 +1,5 @@
 from rest_framework import viewsets, status, permissions
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -10,6 +11,7 @@ from .serializers import *
 from .services import PostService, CommunityService, AuthService
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
+from rest_framework.decorators import api_view
 
 # 1. 회원가입 및 로그인 (Google Auth)
 class AuthViewSet(viewsets.ViewSet):
@@ -159,6 +161,41 @@ class CommunityViewSet(viewsets.ModelViewSet):
 class MemberViewSet(viewsets.ModelViewSet):
     queryset = Member.objects.all()
     serializer_class = MemberSerializer
+    
+    # URL: GET /api/members/my_communities/
+    # token 기반 유저가 속한 communities 반환 
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def my_communities(self, request):
+        user = request.user
+        
+        memberships = Member.objects.filter(user_id=user).select_related('com_uuid')
+        communities = [m.com_uuid for m in memberships]
+        
+        serializer = CommunitySerializer(communities, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    # URL: GET /api/members/get_members/?com_uuid=...
+    @extend_schema(
+        summary="커뮤니티 멤버 목록 조회",
+        description="com_uuid를 사용하여 해당 커뮤니티의 멤버 리스트를 가져옵니다.",
+        parameters=[OpenApiParameter(name='com_uuid', description='커뮤니티의 고유 UUID (PK)', required=False, type=str)]
+    )
+    @action(detail=False, methods=['get'])
+    def get_members(self, request):
+        com_uuid = request.query_params.get('com_uuid')
+        # com_id = request.query_params.get('com_id') # 텍스트 ID
+
+        if com_uuid:
+            try:
+                members = Member.objects.filter(com_uuid=com_uuid)
+            except Community.DoesNotExist:
+                return Response({"error": "해당 커뮤니티를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({"error": "com_uuid가 필요합니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = MemberSerializer(members, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
 
 # 4. 포스트 관리
 class PostViewSet(viewsets.ModelViewSet):
@@ -254,11 +291,8 @@ class PostViewSet(viewsets.ModelViewSet):
 class ChatViewSet(viewsets.ModelViewSet):
     queryset = Chat.objects.all()
     serializer_class = ChatSerializer
-    
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
 
-#테스트용
+# 테스트 API
 @api_view(['GET'])
 def connection_test(request):
     return Response({"message": "백엔드와 연결에 성공했습니다! 🚀"})
