@@ -131,14 +131,13 @@
 - **URL**: `/communities/join/`
 - **Method**: `POST`
 - **Header**: `Authorization: Bearer <ACCESS_TOKEN>`
-- **Request Body**:
-  ```json
-  {
-    "com_id": "알고리즘스터디", // 커뮤니티의 텍스트 ID (com_id, 검색값)
-    "nick_name": "코딩왕",     // 해당 커뮤니티에서 사용할 닉네임
-    "description": "열심히 하겠습니다!" // 커뮤니티 가입 시 입력할 프로필 설명
-  }
-  ```
+- **Content-Type**: `multipart/form-data`
+- **Form Data**:
+  - `com_id`: 커뮤니티의 텍스트 ID (string)
+  - `nick_name`: 해당 커뮤니티에서 사용할 닉네임 (string)
+  - `description`: 소개글 (string, optional)
+  - `profile_image`: 프로필 이미지 파일 (File)
+  - `shame_image`: 수치의 전당용 이미지 파일 (File)
 - **Response (201 Created)**: 생성된 멤버 정보
 
 ### 3-3. 커뮤니티 랭킹 조회
@@ -149,9 +148,16 @@
   [
     {
       "mem_idx": "uuid",
+      "user_id": "uuid",
+      "com_uuid": "uuid",
+      "community_details": { "com_name": "...", ... },
       "nick_name": "코딩왕",
+      "description": "소개글",
       "cert_cnt": 10,
-      "is_late_cnt": 1
+      "is_late_cnt": 1,
+      "profile_img_url": "url",
+      "shame_img_url": "url",
+      "joined_at": "datetime"
     },
     ...
   ]
@@ -164,7 +170,12 @@
 - **Response (200 OK)**:
   ```json
   [
-    { "nick_name": "지각생1", ... },
+    { 
+      "mem_idx": "uuid",
+      "nick_name": "지각생1", 
+      "shame_img_url": "url",
+      ... 
+    },
     ...
   ]
   ```
@@ -309,16 +320,17 @@ REST API를 기반으로 특정 커뮤니티의 이전 대화 내역을 조회�
   [
     {
       "mem_idx": "uuid",      // 멤버 고유 ID (PK)
-      "nick_name": "uuid",    
+      "user_id": "uuid",      // 유저 ID (FK)
+      "com_uuid": "uuid",     // 커뮤니티 ID (FK)
+      "community_details": { ... }, 
+      "nick_name": "닉네임",    
       "description": "소개글",
       "cert_cnt": 0,          // 인증 횟수
       "is_late_cnt": 0,       // 지각 횟수
       "report_cnt": 0,        // 신고 횟수
       "profile_img_url": "url",
       "shame_img_url": "url",
-      "joined_at": "datetime",
-      "user_id": "uuid",      // 유저 ID (FK)
-      "com_uuid": "uuid"      // 커뮤니티 ID (FK)
+      "joined_at": "datetime"
     },
     ...
   ]
