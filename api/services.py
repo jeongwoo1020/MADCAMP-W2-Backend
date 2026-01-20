@@ -51,7 +51,7 @@ class AuthService:
 
 class CommunityService:
     @staticmethod
-    def join_community(user, community, nick_name, profile_image, shame_image, description=""):
+    def join_community(user, community, nick_name, profile_img_url, shame_img_url, description=""):
         """프론트에서 받은 닉네임과 소개를 포함하여 가입 처리"""
         if Member.objects.filter(user_id=user, com_uuid=community).exists():
             raise ValidationError("이미 가입된 커뮤니티입니다.")
@@ -60,8 +60,8 @@ class CommunityService:
             user_id=user,         # 모델의 FK 필드명
             com_uuid=community,     # 모델의 FK 필드명
             nick_name=nick_name,
-            profile_img_url=profile_image,
-            shame_img_url=shame_image,
+            profile_img_url=profile_img_url,
+            shame_img_url=shame_img_url,
             description=description,
             cert_cnt=0,
             is_late_cnt=0
