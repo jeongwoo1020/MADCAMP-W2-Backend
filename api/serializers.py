@@ -36,7 +36,6 @@ class LoginSerializer(serializers.Serializer):
 
 class PostSerializer(serializers.ModelSerializer):
     image_url = serializers.ImageField(use_url=True)
-    # com_id = serializers.CharField(write_only=True, required=False)
     
     class Meta:
         model = Post
