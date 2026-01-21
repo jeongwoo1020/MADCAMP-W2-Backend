@@ -12,3 +12,4 @@ Pillow
 daphne
 channels
 channels-redis
+django-environ

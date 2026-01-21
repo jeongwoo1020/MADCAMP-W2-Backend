@@ -12,10 +12,18 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+import environ
 from google.oauth2 import service_account
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+env = environ.Env(
+    DEBUG=(bool, False) # 기본값은 False
+)
+# .env 파일이 있으면 읽어옴 (로컬 개발용)
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 
 # Quick-start development settings - unsuitable for production
@@ -25,9 +33,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-6k2pc5(ay%8*0f9t!h7y@5+@uc1x!(yg8if_!6y_z$!6i5hv(d"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env('DEBUG', default=True)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
+
+# 1. CSRF 신뢰할 수 있는 오리진 추가 (정우님의 배포 주소)
+CSRF_TRUSTED_ORIGINS = [
+    'https://ddyeo-backend-1003047877852.asia-northeast3.run.app',
+]
+
+# 2. 프록시 헤더 설정 (Cloud Run과 같은 환경에서 HTTPS 인식을 위해 필수)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Application definition
@@ -93,16 +109,31 @@ WSGI_APPLICATION = "config.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'bereal_db',
-        'USER': 'postgres',
-        'PASSWORD': '1020', # docker-compose에 적은 비번
-        'HOST': 'db',               # 중요: 'db'라고 적어야 컨테이너끼리 통신합니다
-        'PORT': '5432',
+IS_GCP = os.getenv('K_SERVICE') or os.getenv('CLOUD_RUN_JOB')
+
+
+if IS_GCP:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'madcamp_db',         # 2단계에서 만든 DB 이름
+            'USER': 'admin',         # 2단계에서 만든 사용자
+            'PASSWORD': env('DB_PASS'),   # 설정하신 비밀번호
+            'HOST': f'/cloudsql/madcamp-w2-backend:asia-northeast3:madcamp-w2-db',
+        }
     }
-}
+else:
+    # 기존 로컬 Docker 설정 유지
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'bereal_db',
+            'USER': 'postgres',
+            'PASSWORD': '1020',
+            'HOST': 'db',
+            'PORT': '5432',
+        }
+    }
 
 
 # Password validation
@@ -149,9 +180,10 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000", # 리액트 기본 주소
+    "http://localhost:3000",
+    # "https://your-frontend-vercel-url.com", 
 ]
-# CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = True
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -165,9 +197,17 @@ GS_BUCKET_NAME = 'madcamp-w2-storage'  # 정우님의 실제 버킷 이름으로
 GS_DEFAULT_ACL = 'publicRead'           # GCS 파일 업로드 시 공개 읽기 권한 부여
 
 # 로컬 테스트 시에는 JSON 키 파일 경로를, 배포 시에는 IAM 사용
-GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
-    os.path.join(BASE_DIR, os.getenv('GS_CREDENTIALS', 'config/gcp-key.json'))
-)
+# GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
+#     os.path.join(BASE_DIR, os.getenv('GS_CREDENTIALS', 'config/gcp-key.json'))
+# )
+
+GS_CREDENTIALS_PATH = os.path.join(BASE_DIR, os.getenv('GS_CREDENTIALS', 'config/gcp-key.json'))
+
+if os.path.exists(GS_CREDENTIALS_PATH):
+    GS_CREDENTIALS = service_account.Credentials.from_service_account_file(GS_CREDENTIALS_PATH)
+else:
+    # 파일이 없으면 None으로 둡니다. (GCP 환경은 기본 서비스 계정 권한을 자동으로 사용함)
+    GS_CREDENTIALS = None
 
 STORAGES = {
     "default": {
@@ -193,11 +233,19 @@ SIMPLE_JWT = {
 }
 
 # Redis 등록을 위한 채널 레이어 설정
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [('redis', 6379)], # 도커 서비스 이름인 'redis' 사용
+if IS_GCP:
+    # 배포 환경에서는 Redis 주소가 달라질 수 있습니다 (GCP MemoryStore 등 사용 시)
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer', # 일단 인메모리로 설정하여 에러 방지
         },
-    },
-}
+    }
+else:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                "hosts": [('redis', 6379)],
+            },
+        },
+    }
