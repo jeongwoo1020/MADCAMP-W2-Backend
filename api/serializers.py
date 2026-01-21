@@ -72,7 +72,7 @@ class ChatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Chat
-        fields = ['user_id', 'sender_id', 'sender_nickname', 'content', 'created_at']
+        fields = ['comment_id', 'user_id', 'com_uuid', 'sender_id', 'sender_nickname', 'content', 'created_at']
         
     def get_sender_nickname(self, obj):
         # 현재 채팅 메시지의 '유저'와 '커뮤니티' 정보를 동시에 만족하는 '멤버'를 찾습니다.
