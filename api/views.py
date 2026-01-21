@@ -245,7 +245,7 @@ class PostViewSet(viewsets.ModelViewSet):
         
         # 3. 미인증 시 타인의 이미지를 마스킹(Blur) 처리
         if not has_certified:
-            MASKED_URL = "https://console.cloud.google.com/storage/browser/_details/madcamp-w2-storage/posts/img_Test2.jpg?pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22))&project=madcamp-w2-backend" # "https://your-s3-bucket.com/static/blurred-placeholder.png"
+            MASKED_URL = "https://storage.googleapis.com/madcamp-w2-storage/blur.jpg" # "https://your-s3-bucket.com/static/blurred-placeholder.png"
             for p in data:
                 # '내 글'이 아닌 경우에만 마스킹 처리
                 # Serializer outputs 'user_id' (UUID) for the ForeignKey

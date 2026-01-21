@@ -84,7 +84,7 @@ class CommunityService:
         
         now = timezone.now()
         today_date = now.date()
-        weekdays_map = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+        weekdays_map = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
         
         # 1. 기준이 되는 '대상 날짜(target_date)' 찾기
         target_date = None
