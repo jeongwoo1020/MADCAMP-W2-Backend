@@ -1,6 +1,6 @@
-# MADCAMP-W2-Backend - BeReal 프로젝트
+# ProoFit - 운동 루틴 인증 웹/앱 서비스
 
-이 저장소는 MADCAMP 2주차 BeReal 스타일 앱의 백엔드 서버입니다. Django REST Framework (DRF)를 기반으로 구축되었으며, 유저 인증, 커뮤니티 관리, 일일 인증 및 실시간 채팅 기능을 제공합니다.
+ProoFit - 운동 루틴 인증 웹/앱 서비스의 백엔드 서버입니다. Django REST Framework (DRF)를 기반으로 구축되었으며, 유저 인증, 커뮤니티 관리, 일일 인증 및 실시간 채팅 기능을 제공합니다.
 
 ## 🛠 기술 스택 (Tech Stack)
 
