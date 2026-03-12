@@ -33,6 +33,11 @@ ProoFit - 운동 루틴 인증 웹/앱 서비스의 백엔드 서버입니다. D
 -   각 커뮤니티별 WebSocket 기반 채팅방 제공.
 -   이전 채팅 내역 불러오는 REST API 제공 (History support).
 
+<img width="387" height="838" alt="2" src="https://github.com/user-attachments/assets/544e346d-38fd-4d9e-a642-382d9387963a" />
+<img width="377" height="821" alt="1" src="https://github.com/user-attachments/assets/e49034df-b6c0-4d06-979b-f39fdc3b6502" />
+<img width="375" height="822" alt="3" src="https://github.com/user-attachments/assets/8d0f4e53-44a1-444f-bd19-f109c1e7c00c" />
+
+
 ## 📦 설치 및 실행 가이드
 
 ### 필수 요구사항
